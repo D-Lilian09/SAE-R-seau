@@ -2,9 +2,10 @@
 title Diagramme de séquence — Traitement d'une requête HTTP
 
 
-participant "Ecouteur" as E
-participant "Handler" as H
-participant "Système fichiers" as FS
+participant "E : Ecouteur" as E
+participant "H : Handler" as H
+participant "FS : Système fichiers" as FS
+participant "C : Client" as C
 
  -> E : connexion TCP
 E -> H : new Handler(ps).start()
@@ -18,9 +19,9 @@ FS --> H : contenu fichier
 H -> H : calculerETag(contenu)
 
 
-H --> Client : HTTP 200 OK + ETag + contenu
+H -> C : HTTP 200 OK + ETag + contenu
 H -> H : ecrireLog(accesLog, "200 OK")
-
+ <-- H: affichage effectuer
 deactivate H
 
 
