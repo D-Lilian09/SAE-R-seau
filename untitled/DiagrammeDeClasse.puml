@@ -14,6 +14,7 @@ class Handler{
     + envoyer404()
     + calculerETag(byte[] contenu): String
     + ecrireLog(String cheminFichier, String message)
+    + traiterDyna(String html): String
 }
 
 class Ecouteur{
@@ -41,5 +42,9 @@ class ParamSite{
     + getDefaultIndex() : String
     + getErrorLog() :String
 }
+Ecouteur "1" --> "1" ParamSite : possède
+Handler "1" --> "1" ParamSite : utilise
+Ecouteur ..> Handler
+LecteurConfig ..> ParamSite
 
 @enduml
