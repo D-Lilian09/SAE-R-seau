@@ -1,0 +1,50 @@
+@startuml
+
+class Handler{
+    - client: Socket
+    - ps: ParamSite
+    - home: String
+
+    + Handler(Socket client, ParamSite ps)
+    + run()
+    + traiterRequete()
+    + envoyerFichier(File f, String ifNoneMatch)
+    + envoyerListeFichiers(File dossier, String chemin)
+    + envoyerStatus()
+    + envoyer404()
+    + calculerETag(byte[] contenu): String
+    + ecrireLog(String cheminFichier, String message)
+    + traiterDyna(String html): String
+}
+
+class Ecouteur{
+    - ps: ParamSite
+
+    + Ecouteur(ParamSite ps)
+    + run()
+}
+
+class LecteurConfig{
+    {static} + lire(String cheminConfig): ParamSite[]
+}
+
+class ParamSite{
+    - port : int
+    - documentRoot : String
+    - defaultIndex : String
+    - accesLog : String
+    - errorLog : String
+
+    + ParamSite(int p, String dr, String di, String a, String e)
+    + getPort(): int
+    + getDocumentRoot() : String
+    + getDefaultIndex() : String
+    + getDefaultIndex() : String
+    + getErrorLog() :String
+}
+Ecouteur "1" --> "1" ParamSite : possède
+Handler "1" --> "1" ParamSite : utilise
+Ecouteur ..> Handler
+LecteurConfig ..> ParamSite
+
+@enduml
