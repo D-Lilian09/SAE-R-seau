@@ -80,12 +80,12 @@ public class Handler extends Thread {
                 gzos.close();
                 byte[] contenuCompresse = baos.toByteArray();
 
-                // Envoi avec l'en-tête Content-Encoding: gzip
+
                 sortie.write(("HTTP/1.1 200 OK\r\n" + entetesBase + "ETag: " + etag + "\r\nContent-Encoding: gzip\r\nContent-Length: " + contenuCompresse.length + "\r\n\r\n").getBytes());
                 sortie.write(contenuCompresse);
                 ecrireLog(cheminAccesLog, "GET " + f.getName() + " -> 200 OK (GZIP)");
             } else {
-                // Envoi standard pour le HTML, CSS, ou texte classique
+
                 sortie.write(("HTTP/1.1 200 OK\r\n" + entetesBase + "ETag: " + etag + "\r\nContent-Length: " + contenu.length + "\r\n\r\n").getBytes());
                 sortie.write(contenu);
                 ecrireLog(cheminAccesLog, "GET " + f.getName() + " -> 200 OK");
