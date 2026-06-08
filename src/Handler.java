@@ -57,6 +57,11 @@ public class Handler extends Thread {
 
     private void envoyerFichier(File f, String ifNoneMatch) throws Exception {
         byte[] contenu = Files.readAllBytes(f.toPath());
+        if (f.getName().toLowerCase().endsWith(".html")) {
+            String html = new String(contenu);
+            html = traiterDyna(html);
+            contenu = html.getBytes();
+        }
         String etag = calculerETag(contenu);
         OutputStream sortie = client.getOutputStream();
         String cheminAccesLog = home + ps.getAccesLog();
@@ -113,16 +118,22 @@ public class Handler extends Thread {
         long memoireLibre = runtime.freeMemory() / (1024 * 1024);
         int processeurs = runtime.availableProcessors();
 
+        // Espace disque
+        File disque = new File(".");
+        long disqueTotal = disque.getTotalSpace() / (1024 * 1024 * 1024);
+        long disqueLibre = disque.getFreeSpace() / (1024 * 1024 * 1024);
+
         String html = "<html><body>";
-        html += "<h1>Etat de la Machine Virtuelle Java (JVM)</h1>";
+        html += "<h1>Etat du serveur</h1>";
         html += "<p>Processeurs disponibles : " + processeurs + "</p>";
         html += "<p>Memoire totale allouee : " + memoireTotale + " Mo</p>";
         html += "<p>Memoire libre restante : " + memoireLibre + " Mo</p>";
+        html += "<p>Espace disque total : " + disqueTotal + " Go</p>";
+        html += "<p>Espace disque libre : " + disqueLibre + " Go</p>";
         html += "</body></html>";
 
         byte[] contenu = html.getBytes();
         OutputStream sortie = client.getOutputStream();
-
         String entetesBase = "Date: " + new Date().toString() + "\r\nServer: MiniWebJava\r\n";
         sortie.write(("HTTP/1.1 200 OK\r\n" + entetesBase + "Content-Type: text/html\r\nContent-Length: " + contenu.length + "\r\n\r\n").getBytes());
         sortie.write(contenu);
@@ -165,5 +176,43 @@ public class Handler extends Thread {
         } catch (Exception e) {
             System.out.println("Erreur écriture log : " + e.getMessage());
         }
+    }
+
+    private String traiterDyna(String html) {
+        String resultat = html;
+        int debut = resultat.indexOf("<code interpreteur=");
+
+        while (debut != -1) {
+            int debutInterp = resultat.indexOf("=", debut) + 1;
+            int finInterp = resultat.indexOf(">", debutInterp);
+            String interpreteur = resultat.substring(debutInterp, finInterp)
+                    .replace("«", "").replace("»", "").replace("\"", "").trim();
+
+            int debutCode = finInterp + 1;
+            int finCode = resultat.indexOf("</code>", debutCode);
+            String code = resultat.substring(debutCode, finCode).trim();
+
+            String sortie = "";
+            try {
+                ProcessBuilder pb = new ProcessBuilder(interpreteur);
+                pb.redirectErrorStream(true);
+                Process process = pb.start();
+                process.getOutputStream().write(code.getBytes());
+                process.getOutputStream().close();
+                BufferedReader br = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String ligne = br.readLine();
+                while (ligne != null) {
+                    sortie += ligne + " ";
+                    ligne = br.readLine();
+                }
+                process.waitFor();
+            } catch (Exception e) {
+                sortie = "[Erreur : " + e.getMessage() + "]";
+            }
+
+            resultat = resultat.substring(0, debut) + sortie + resultat.substring(finCode + 7);
+            debut = resultat.indexOf("<code interpreteur=");
+        }
+        return resultat;
     }
 }
