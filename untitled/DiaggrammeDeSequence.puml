@@ -1,0 +1,27 @@
+@startuml
+title Diagramme de séquence — Traitement d'une requête HTTP
+
+
+participant "Ecouteur" as E
+participant "Handler" as H
+participant "Système fichiers" as FS
+
+ -> E : connexion TCP
+E -> H : new Handler(ps).start()
+activate H
+
+ -> H : GET /index.html HTTP/1.1
+
+H -> FS : lire fichier
+FS --> H : contenu fichier
+
+H -> H : calculerETag(contenu)
+
+
+H --> Client : HTTP 200 OK + ETag + contenu
+H -> H : ecrireLog(accesLog, "200 OK")
+
+deactivate H
+
+
+@enduml
